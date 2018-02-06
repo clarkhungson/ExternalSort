@@ -3,6 +3,7 @@
 // tel: +84164 944 5637
 
 // Build command: g++ -o main main.cpp -std=c++11
+// program: external sorting for a large text file
 
 #include <memory>
 #include <stdio.h>
@@ -54,7 +55,7 @@ int main()
 		return 0;
 	}
 
-	// 1. Get temp_data to temporary files: text_temp_1.txt, text_temp_2.txt, ...
+	// 1. Put temp_data to temporary files: text_temp_1.txt, text_temp_2.txt, ...
 	// Afer this step, this program creates some temporary files whose size can fit RAM_SIZE
 	ofstream temp_outputStream;			// Temporary output file
 	filename = "text_temp_" + to_string(1) + ".txt";
@@ -65,10 +66,10 @@ int main()
 	while (!inputStream.eof())
 	{
 		getline(inputStream, line);
-		if (buffer_size < RAM_SIZE * 1024 - line.size())
+		if (buffer_size < RAM_SIZE * 1024 * 1024 - line.size())
 		{
 			// get line
-			if (is_first_line != 1)
+			if (!is_first_line)
 				temp_outputStream << endl;
 			temp_outputStream << line ;
 			buffer_size += line.size();
@@ -84,7 +85,7 @@ int main()
 			temp_outputStream << line;
 			buffer_size += line.size();	
 		}
-		is_first_line = (is_first_line == 1) ? 0:-1;
+		is_first_line = (is_first_line == 1) ? 0:0;
 	}
 	temp_outputStream.close();
 
@@ -145,9 +146,14 @@ int main()
 	index = min_pair(container, min_line);		// fill index, fill min_line
 
 	// merging all temporary files -> output file
+	is_first_line = 1;
 	while (index >= 0)
 	{
-		outputStream << min_line.second << endl;
+		if (!is_first_line)
+		{
+			outputStream << endl;
+		}
+		outputStream << min_line.second;
 		container.erase(container.begin() + index);
 		if (!temp_file[min_line.first].eof())
 		{
@@ -156,6 +162,7 @@ int main()
 				container.push_back(pair<int, string>(min_line.first, line));
 		}
 		index = min_pair(container, min_line);
+		is_first_line = (is_first_line == 1) ? 0:0;
 	}
 
 	// remove all temporary file
