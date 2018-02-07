@@ -3,7 +3,13 @@
 // tel: +84164 944 5637
 
 // Build command: g++ -o main main.cpp -std=c++11
-// program: external sorting for a large text file
+
+// Program: external sorting for a large text file
+// My code work well with: ascii or non-ascii charaters, empty file, small file, large file!
+// Ex: I've already test for: 1.2 GB text file and 200 MB RAM
+
+// Note: using qsort from std library, care about bottle necks from IO
+// Haven't use multithread
 
 #include <memory>
 #include <stdio.h>
@@ -29,6 +35,7 @@ int main()
 	string inputFileName;                                              // input file name
 	string outputfileName;                                             // output file name
 	unsigned int RAM_SIZE;                                             // RAM_SIZE (MB) from input
+	unsigned int RAM_SIZE_BYTE;                                        // RAM_SIZE (Bytes)
 	string line;                                                       // store 1 line of a file
 	int buffer_size = 0;                                               // store size (Byte) of a temporary file, it should be smalled than RAM_SIZE
 	string filename;                                                   // store filename
@@ -40,6 +47,7 @@ int main()
 	cin >> RAM_SIZE;
 	cout << "Output file: ";
 	cin >> outputfileName;
+	RAM_SIZE_BYTE = RAM_SIZE * 1024 * 1024;
 
 	// Open Input file for reading
 	ifstream inputStream(inputFileName);
@@ -56,25 +64,26 @@ int main()
 		return 0;
 	}
 
-	//   *** 1. Reading data that fit RAM_SIZE to sort using qsort. 
+	//          ****************************************************************
+	//          1. Reading data that fit RAM_SIZE_BYTE to sort using qsort. 
 	//          Then put temp_data to temporary files: text_temp_1.txt, text_temp_2.txt, ...
-	ofstream temp_outputStream;                                        // Temporary output file
+	ofstream temp_outputStream;                                        // temporary output file
 	filename = "text_temp_" + to_string(1) + ".txt";
 	temp_outputStream.open(filename);
-	int number_temp_file = 1;                                          // Number of temporary files
+	int number_temp_file = 1;                                          // number of temporary files
 
-	vector<string> temp_data;                                          // Data that fit RAM_SIZE
+	vector<string> temp_data;                                          // data that fit RAM_SIZE_BYTE
 	while (!inputStream.eof())
 	{
 		getline(inputStream, line);
-		if (buffer_size < RAM_SIZE * 1024 * 1024 - line.size())
+		if (buffer_size < RAM_SIZE_BYTE - line.size())
 		{
 			buffer_size += line.size();
 			temp_data.push_back(line);
 		}
 		else
 		{
-			// sort, then store into each temporary file (not the last)
+			// sort, then them store into each temporary file (not the last)
 			qsort(&temp_data[0], temp_data.size(), sizeof(string), isGreater);
 			for (vector<string>::iterator iterator = temp_data.begin(); iterator < temp_data.end(); ++iterator)
 			{
@@ -98,7 +107,7 @@ int main()
 		}
 	}
 
-	// sort then store into the last temporary file
+	// sort, then store them into the last temporary file
 	qsort(&temp_data[0], temp_data.size(), sizeof(string), isGreater);
 	for (vector<string>::iterator iterator = temp_data.begin(); iterator < temp_data.end(); ++iterator)
 	{
@@ -110,7 +119,8 @@ int main()
 	}
 	temp_outputStream.close();
 
-	// *** 2. Merge all sorted temporary file to output file
+	//        ****************************************************************
+	//        2. Merge all sorted temporary file to output file
 	//        Using input buffer, output buffer to avoid bottle necks from IO
 	ifstream temp_file[number_temp_file];
 	
@@ -132,10 +142,10 @@ int main()
 	// in, out buffer for IO process
 	queue<string> input_buffer[number_temp_file];
 	queue<string> output_buffer;
-	int input_buffer_max_size = (int) RAM_SIZE / (number_temp_file + 1);                          // input buffer max size: ~ RAMSIZE/(number_temp_file + 1)
+	int input_buffer_max_size = (int) RAM_SIZE_BYTE / (number_temp_file + 1);                          // input buffer max size: ~ RAMSIZE/(number_temp_file + 1)
 	int output_buffer_max_size = input_buffer_max_size;                                           // output buffer max size: ~ RAMSIZE/(number_temp_file + 1)
 	int input_buffer_size;                                                                        // current input buffer                       
-	int output_buffer_size;                                                                       // curretn output buffer
+	int output_buffer_size;                                                                       // current output buffer
 
 	// first, fill all input buffers whose size ~ input_buffer_max_size
 	for (int i = 0; i < number_temp_file; i++)
@@ -233,14 +243,16 @@ int main()
 	outputStream.close();
 
 	// remove all temporary files
-	for (int i = 1; i <= number_temp_file; i++)
+	for (int i = 0; i < number_temp_file; i++)
 	{
-		filename = "text_temp_" + to_string(i) + ".txt";
+		temp_file[i].close();
+		filename = "text_temp_" + to_string(i+1) + ".txt";
 		remove(filename.c_str());
 	}
 
-	cout << "input_buffer_max_size: " << input_buffer_max_size << endl;
-	cout << "output_buffer_max_size: " << output_buffer_max_size << endl;
+	cout << "----------------------------------" << endl;
+	cout << "input_buffer_max_size (byte): " << input_buffer_max_size << endl;
+	cout << "output_buffer_max_size (byte): " << output_buffer_max_size << endl;
 	cout << "Number of temporary files: " << number_temp_file << endl;
 	return 0;
 }
