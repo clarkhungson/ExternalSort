@@ -6,7 +6,7 @@
 
 // Program: external sorting for a large text file
 // My code work well with: ascii or non-ascii charaters, empty file, small file, large file!
-// Ex: I've already test for: 1.2 GB text file and 200 MB RAM
+// Ex: I've already test for: 1.2 GB text file and 200 MB RAM, 150 MB text file and 10 MB RAM, 172 Bytes text file and 20 bytes RAM, 0 bytes text file and 1 MB RAM, ...
 
 // Note: using qsort from std library, care about bottle necks from IO
 // Haven't use multithread
@@ -142,7 +142,7 @@ int main()
 	// in, out buffer for IO process
 	queue<string> input_buffer[number_temp_file];
 	queue<string> output_buffer;
-	int input_buffer_max_size = (int) RAM_SIZE_BYTE / (number_temp_file + 1);                          // input buffer max size: ~ RAMSIZE/(number_temp_file + 1)
+	int input_buffer_max_size = (int) RAM_SIZE_BYTE / (number_temp_file + 1);                     // input buffer max size: ~ RAMSIZE/(number_temp_file + 1)
 	int output_buffer_max_size = input_buffer_max_size;                                           // output buffer max size: ~ RAMSIZE/(number_temp_file + 1)
 	int input_buffer_size;                                                                        // current input buffer                       
 	int output_buffer_size;                                                                       // current output buffer
